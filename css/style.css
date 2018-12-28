@@ -1,0 +1,22 @@
+body
+{
+    background: #00688B;
+    padding: 0;
+    font-family: Ubuntu;
+    font-style: normal;
+    font-variant: normal;
+}
+
+#app
+{
+    background: snow;
+    min-height: 100vh;
+    padding-bottom: 5px;
+}
+
+#gl_canvas
+{
+    margin: 3px;
+    border: 1px solid #00688B;
+    background: white;
+}

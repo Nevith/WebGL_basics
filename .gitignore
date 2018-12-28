@@ -59,3 +59,9 @@ typings/
 
 # next.js build output
 .next
+
+# visaul code files
+.vscode
+
+# jet brains files
+.idea
