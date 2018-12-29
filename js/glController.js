@@ -3,6 +3,9 @@ let gl = null;
 let glCanvas = null;
 let shaderProgram = null;
 
+// Other globals
+let drawables = [];
+
 
 // Runs on load
 $(function()
@@ -18,7 +21,7 @@ $(function()
     if (!gl) {
         return;
     }
-    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.DEPTH_TEST);   // Enable depth test
     
     // Define shaders
     const shaderSet = [
@@ -31,8 +34,19 @@ $(function()
             id: "fragment-shader"
         }
     ];
-    // Compile shaders build shader program
+
+    // Compiles shaders builds shader program
     shaderProgram = buildShaderProgram(shaderSet);
+
+    // Demo triangle
+    drawables.push(glDrawable(new Float32Array([ -1, -1, 0, -1.5, 1, 0.0, -1.5, -1.5, 0.0 ]), gl, shaderProgram));
+    drawables.push(glDrawable(new Float32Array([ 1, 1, 0, 1.5, 1, 0.0, 1.5, 1.5, 0.0 ]), gl, shaderProgram));
+    drawables.push(glDrawable(new Float32Array([ 0, 0, 0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0 ]), gl, shaderProgram));
+
+
+
+    // Init draw
+    setInterval(draw, 33);
 });
 
 
@@ -76,4 +90,36 @@ function compileShader(id, type) {
         console.log(gl.getShaderInfoLog(shader));
     }
     return shader;
+}
+
+
+// Draws a frame
+function draw()
+{
+    // Clear buffer
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    // Create camera matrices
+    let proj_matrix = mat4.create();
+    mat4.perspective(proj_matrix, glMatrix.toRadian(80), glCanvas.width / glCanvas.height, 0.1, 1000);
+    let model_matrix = mat4.identity(mat4.create());
+    let view_matrix = mat4.create();
+    mat4.identity(view_matrix);
+    view_matrix = mat4.translate(mat4.create(), view_matrix, vec3.fromValues(0, 0, -2));
+
+    // Calculate the pvm matrix
+    let PVM = mat4.multiply(mat4.create(), proj_matrix, mat4.multiply(mat4.create(), view_matrix, model_matrix));
+
+    gl.useProgram(shaderProgram);
+    gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "PVM"), false, PVM);
+
+    for(let i = 0; i < drawables.length; ++i)
+    {
+        drawables[i].draw();
+    }
+
+    let e = gl.getError();
+    if (e) {
+        console.log(`Error creating WebGL context: ${e.toString()}`);
+    }
 }

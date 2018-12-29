@@ -28,6 +28,7 @@
         <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu" />
 
         <!-- Our code -->
+        <script src="js/glDrawable.js"></script>
         <script src="js/glController.js"></script>
         <link rel="stylesheet" href="css/style.css">
 
@@ -38,15 +39,17 @@
             
             precision mediump float;
 
-            // uniform mat4 PVM;
+            uniform mat4 PVM;
+            uniform mat4 model;
 
-            // attribute vec3 VertexPosition;
-            // attribute vec3 VertexNormal;
-            // attribute mat4 M;
+            attribute vec3 vertices;
+            attribute vec3 colors;
 
-            // varying vec3 LightIntensity;
+            varying vec3 verColor;
 
             void main(){
+                gl_Position=PVM * model * vec4(vertices,1);
+                verColor = colors;
             }
 
         </script>
@@ -54,8 +57,10 @@
             #version 100
 
             precision mediump float;
+            varying vec3 verColor;
 
             void main(){
+                gl_FragColor=vec4(verColor[0],verColor[1],verColor[2],1);
             }
         </script>
     </head>
