@@ -44,6 +44,25 @@ $(function()
     // Capture inputs to move camera
     bindCameraMovement(glCanvas);
 
+    // Add floor as a preset object
+    drawables.push(glDrawable(
+        {
+            vertices: [
+                [-10.0, -5.0, -10.0],[10, -5.0, -10.0],[-10, -5.0, 10.0],
+                [10.0, -5.0, -10.0],[10, -5.0, 10.0], [-10, -5.0, 10.0]],
+            textures: [
+                [0.0, 0.0],[1.0, 0.0],[0.0, 1.0],
+                [1.0, 0.0],[1.0, 1.0],[0.0, 1.0],
+            ],
+            normals: [
+                [0.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 1.0, 0.0],
+                [0.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 1.0, 0.0],
+            ],
+            name: "floor",
+        },
+        gl, shaderProgram));
+    createElementList(drawables);   // Create UI for floor
+
     // Init draw
     gl.clearColor(1, 1, 1, 1);
     setInterval(draw, 33);
@@ -111,7 +130,7 @@ function draw()
     {
         mat4.ortho(perspectiveMatrix, -4, -4, -4, -4, 0.1, 10);
     }
-    // Transform camera perspective
+    // Transform camera view coordinates
     viewMatrix = mat4.translate(mat4.create(), viewMatrix, vec3.fromValues(cameraMovement.camX, cameraMovement.camY, cameraMovement.camZ));
     viewMatrix = mat4.rotate(mat4.create(), viewMatrix, glMatrix.toRadian(cameraMovement.camRotY), vec3.fromValues(0, 1, 0));
     viewMatrix = mat4.rotate(mat4.create(), viewMatrix, glMatrix.toRadian(cameraMovement.camRotX), vec3.fromValues(1, 0, 0));
@@ -138,74 +157,55 @@ function draw()
 }
 
 
-// Lets user choose a .obj file to display
-function fromObj()
+// Parse .obj text/string and create a drawable object
+function parseObj(objText, name)
 {
-    // Open file dialog that accepts .obj files
-    let input = $("<input type=\"file\" id=\"theFile\" accept=\".obj\"/>");
-    // On file selection
-    input.change(function () {
-        let file = input.prop("files")[0];
-        // If file selected
-        if (file) {
-            // Read file contents
-            let reader = new FileReader();
-            reader.readAsText(file, "UTF-8");
-            reader.onload = function (evt) {
-                // Parse .obj file
-                let objText = evt.target.result;
-                let obj =
-                    {
-                        vertices: [],
-                        textures: [],
-                        normals: [],
-                    };
+    objText = objText.replace(/\/r/g, '');
+    // Parse .obj file
+    let obj =
+        {
+            vertices: [],
+            textures: [],
+            normals: [],
+        };
 
-                let vertices = [];
-                let textures = [];
-                let normals = [];
+    let vertices = [];
+    let textures = [];
+    let normals = [];
 
-                objText = objText.split("\n");
-                for(let i = 0; i < objText.length; ++i)
-                {
-                    let data = objText[i].split(" ");
-                    // Parse vertex data
-                    if(data[0] == "v")
-                    {
-                        vertices.push([parseFloat(data[1]), parseFloat(data[2]), parseFloat(data[3])]);
-                    }
-                    // Parse uv data
-                    else if(data[0] == "vt")
-                    {
-                        textures.push([parseFloat(data[1]), parseFloat(data[2])]);
-                    }
-                    // Parse normal data
-                    else if(data[0] == "vn")
-                    {
-                        normals.push([parseFloat(data[1]), parseFloat(data[2]), parseFloat(data[3])]);
-                    }
-                    // Order vertices correctly
-                    else if(data[0] == "f")
-                    {
-                        for(let j = 1; j < 4; ++j)
-                        {
-                            let indexes = data[j].split("/");
-                            obj.vertices.push(vertices[parseInt(indexes[0]) - 1]);
-                            obj.textures.push(textures[parseInt(indexes[0]) - 1]);
-                            obj.normals.push(normals[parseInt(indexes[0]) - 1]);
-                        }
-                    }
-                }
-                obj.name = file.name.split(".")[0];
-                drawables.push(glDrawable(obj, gl, shaderProgram));
-                createElementList(drawables);   // Create UI for drawable object when parsed
-            };
-            reader.onerror = function (evt) {
-                console.log("Error opening file");
+    objText = objText.split("\n");
+    for(let i = 0; i < objText.length; ++i)
+    {
+        let data = objText[i].split(" ");
+        // Parse vertex data
+        if(data[0] == "v")
+        {
+            vertices.push([parseFloat(data[1]), parseFloat(data[2]), parseFloat(data[3])]);
+        }
+        // Parse uv data
+        else if(data[0] == "vt")
+        {
+            textures.push([parseFloat(data[1]), parseFloat(data[2])]);
+        }
+        // Parse normal data
+        else if(data[0] == "vn")
+        {
+            normals.push([parseFloat(data[1]), parseFloat(data[2]), parseFloat(data[3])]);
+        }
+        // Order vertices correctly
+        else if(data[0] == "f")
+        {
+            for(let j = 1; j < 4; ++j)
+            {
+                let indexes = data[j].split("/");
+                obj.vertices.push(vertices[parseInt(indexes[0]) - 1]);
+                obj.textures.push(textures[parseInt(indexes[1]) - 1]);
+                obj.normals.push(normals[parseInt(indexes[2]) - 1]);
             }
         }
-
-    });
-    // Open dialog
-    input.trigger('click');
+    }
+    console.log(obj);
+    obj.name = name;
+    drawables.push(glDrawable(obj, gl, shaderProgram));
+    createElementList(drawables);   // Create UI for drawable object when parsed
 }

@@ -6,6 +6,7 @@ let camY = 0, camX = 0, camZ = 0;
 let camRotY = 0, camRotX = 0, camRotZ = 0;
 let perspective = NORMAL_PERSPECTIVE;
 
+
 function createElementList(drawables)
 {
     let objectContainer = $("#object_container");
@@ -16,11 +17,11 @@ function createElementList(drawables)
         let obj = drawables[i];
         // Title of UI element is the object's name
         objectContainer.append($("<div class='row'></div>"));
-        objectContainer.append($(`<span style='font-size: 1em; font-weight: bold; padding-left: -5px'>${obj.name.toUpperCase()}</span>`));
+        objectContainer.append($(`<span style='font-size: 1em; font-weight: bold; padding-left: -5px'>${i+1} ${obj.name.toUpperCase()}</span>`));
 
         // Add buttons in rows
         let currentRow = $("<div class='row'></div>");
-        for(let j = 0; j < 15; ++j)
+        for(let j = 0; j < 16; ++j)
         {
             // Split buttons into groups of max 6
             if((j % 6) == 0 && j != 0)
@@ -34,6 +35,7 @@ function createElementList(drawables)
         objectContainer.append($("<div class='row border_bottom'></div>"))
     }
 }
+
 
 function bindCameraMovement(canvas)
 {
@@ -78,7 +80,10 @@ function bindCameraMovement(canvas)
                 break;
 
             case 32:
-                perspective = !perspective;
+                if(perspective == NORMAL_PERSPECTIVE)
+                    perspective = ORTHO_PERSPECTIVE;
+                else
+                    perspective = NORMAL_PERSPECTIVE;
                 break;
         }
         canvas.tabIndex = 1000;
@@ -87,6 +92,7 @@ function bindCameraMovement(canvas)
     canvas.tabIndex = 1000;
     canvas.focus();
 }
+
 
 function getCameraMovement()
 {
@@ -107,6 +113,7 @@ function getCameraMovement()
 
     return result;
 }
+
 
 function getButton(type, drawables, i)
 {
@@ -228,9 +235,41 @@ function getButton(type, drawables, i)
         params.scale = 0.8;
         params.func = 3;
     }
+    else if(type == cheat++)
+    {
+        let button = $(`<button id='${obj.name}${type}' class=\"btn btn-warning\" style=\"margin: 5px; float: left; height: 30px; width: 30px; padding: 0;\">` +
+            `<span class=\"fa fa-image\"></span>` +
+            "</button>");
+        button.on("click", function () {
+            // Open file dialog that accepts .png and .jpg files
+            let input = $("<input type=\"file\" accept=\"image/*\"/>");
+            console.log(input);
+            // On file selection
+            input.change(function () {
+                let file = input.prop("files")[0];
+                // If file selected
+                if (file) {
+                    // Read file contents
+                    let reader = new FileReader();
+                    reader.onload = function (evt) {
+                        // Get the img data
+                        let imgData = evt.target.result;
+                        obj.loadTexture(imgData);
+                    };
+                    reader.onerror = function (evt) {
+                        console.log("Error opening file");
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            // Open dialog
+            input.trigger('click');
+        });
+        return button;
+    }
     else if(type == cheat)
     {
-        let button = $(`<button id='${obj.name}${type}' class=\"btn btn-danger\" style=\"margin: 5px; float: right; height: 30px; width: 30px; padding: 0;\">` +
+        let button = $(`<button id='${obj.name}${type}' class=\"btn btn-danger\" style=\"margin: 5px; float: left; height: 30px; width: 30px; padding: 0;\">` +
             `<span class=\"fa fa-times\"></span>` +
             "</button>");
         button.on("click", function () {
@@ -255,4 +294,31 @@ function getButton(type, drawables, i)
     });
 
     return button;
+}
+
+
+// Lets user choose a .obj file to display
+function selectObj()
+{
+    // Open file dialog that accepts .obj files
+    let input = $("<input type=\"file\" accept=\".obj\"/>");
+    // On file selection
+    input.change(function () {
+        let file = input.prop("files")[0];
+        // If file selected
+        if (file) {
+            // Read file contents
+            let reader = new FileReader();
+            reader.readAsText(file, "UTF-8");
+            reader.onload = function (evt) {
+                parseObj(evt.target.result, file.name.split(".")[0]);
+            };
+            reader.onerror = function (evt) {
+                console.log("Error opening file");
+            }
+        }
+
+    });
+    // Open dialog
+    input.trigger('click');
 }

@@ -49,11 +49,13 @@
             attribute vec3 normal;
             attribute vec2 uv;
 
-            varying vec3 verColor;
+            varying vec2 texture_coordinates;
+            // varying vec3 normal_v;
 
             void main(){
-                gl_Position=PV * M * vec4(vertex,1);
-                verColor = normal + vec3(uv[0], uv[1], uv[0]+uv[1]);
+                gl_Position= PV * M * vec4(vertex,1);
+                texture_coordinates = uv;
+                // normal_v = normal;
             }
 
         </script>
@@ -61,10 +63,14 @@
             #version 100
 
             precision mediump float;
-            varying vec3 verColor;
+
+            uniform sampler2D sampler;
+
+            varying vec2 texture_coordinates;
+            // varying vec3 normal_v
 
             void main(){
-                gl_FragColor=vec4(verColor[0],verColor[1],verColor[2],1);
+                gl_FragColor = texture2D(sampler, texture_coordinates);
             }
         </script>
     </head>
@@ -87,7 +93,7 @@
                 </div>
                 <div id="button_box">
                     <button class="btn btn-primary" style="margin: 5px"
-                            onclick="fromObj()">
+                            onclick="selectObj()">
                         <span class="fa fa-plus"></span>
                         <button class="btn btn-warning" style="margin: 5px"
                                 onclick="">

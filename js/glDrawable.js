@@ -9,25 +9,31 @@ function glDrawable(data, gl, program)
     let vertices = new Float32Array(data.vertices.length*3);
     for(let i = 0; i < vertices.length; ++i)
     {
-        let index1 = Math.floor(i/3);
-        let index2 = i % 3;
-        vertices[i] = data.vertices[index1][index2];
+        let indexFirst = Math.floor(i/3);
+        let indexSecond = i % 3;
+        vertices[i] = data.vertices[indexFirst][indexSecond];
     }
     // Normals
     let normals = new Float32Array(data.normals.length*3);
     for(let i = 0; i < normals.length; ++i)
     {
-        let index1 = Math.floor(i/3);
-        let index2 = i % 3;
-        normals[i] = data.normals[index1][index2];
+        let indexFirst = Math.floor(i/3);
+        let indexSecond = i % 3;
+
+        if(!data.normals[indexFirst])
+        {
+            let a = 5;
+        }
+
+        normals[i] = data.normals[indexFirst][indexSecond];
     }
     // Uvs
     let uvs = new Float32Array(data.textures.length*2);
     for(let i = 0; i < uvs.length; ++i)
     {
-        let index1 = Math.floor(i/2);
-        let index2 = i % 2;
-        uvs[i] = data.textures[index1][index2];
+        let indexFirst = Math.floor(i/2);
+        let indexSecond = i % 2;
+        uvs[i] = data.textures[indexFirst][indexSecond];
     }
 
     // Create buffer on gpu
@@ -51,6 +57,26 @@ function glDrawable(data, gl, program)
     let verticesLocation = gl.getAttribLocation(program, "vertex");
     let normalLocation = gl.getAttribLocation(program, "normal");
     let uvLocation = gl.getAttribLocation(program, "uv");
+    let samplerLocation = gl.getUniformLocation(program, 'sampler');
+
+    // Texture
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // Until an image is selected put a single pixel in the texture so we can
+    // use it immediately. When the image is selected
+    // we'll update the texture with the contents of the image.
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const width = 1;
+    const height = 1;
+    const border = 0;
+    const srcFormat = gl.RGBA;
+    const srcType = gl.UNSIGNED_BYTE;
+    const pixel = new Uint8Array([0, 0, 255, 255]);  // opaque blue
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+        width, height, border, srcFormat, srcType,
+        pixel);
 
 
     let draw = function()
@@ -73,6 +99,22 @@ function glDrawable(data, gl, program)
         // Model matrix
         gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "M"), false, modelMatrix);
 
+        // Texture
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        // gl.NEAREST is also allowed, instead of gl.LINEAR, as neither mipmap.
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        // Prevents s-coordinate wrapping (repeating).
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        // Prevents t-coordinate wrapping (repeating).
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        // Tell WebGL we want to affect texture unit 0
+        gl.activeTexture(gl.TEXTURE0);
+        // Bind the texture to texture unit 0
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        // Tell the shader we bound the texture to texture unit 0
+        gl.uniform1i(samplerLocation, 0);
+
         gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 3);
     };
 
@@ -90,22 +132,42 @@ function glDrawable(data, gl, program)
         modelMatrix = mat4.scale(mat4.create(), modelMatrix, vec3.fromValues(x, y, z));
     };
 
+    let loadTexture = function(dataUrl) {
+        const image = new Image();
+        image.onload = function() {
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                srcFormat, srcType, image);
+
+            // WebGL1 has different requirements for power of 2 images
+            // vs non power of 2 images so check if the image is a
+            // power of 2 in both dimensions.
+            if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+                // Yes, it's a power of 2. Generate mips.
+                gl.generateMipmap(gl.TEXTURE_2D);
+            } else {
+                // No, it's not a power of 2. Turn off mips and set
+                // wrapping to clamp to edge
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            }
+        };
+        image.src = dataUrl;
+    };
+
     return{
         name: name,
         draw : draw,
         rotate: rotate,
         translate: translate,
         scale: scale,
+        loadTexture: loadTexture,
     }
 
 }
 
 
-/*
-let numComponents = 3;  // (x, y, z)
-let type = gl.FLOAT;    // 32bit floating point values
-let normalize = false;  // leave the values as they are
-let stride = 0;         // how many bytes to move to the next vertex
-let offset = 0;         // start at the beginning of the buffer
-// 0 = use the correct stride for type and numComponents
-*/
+function isPowerOf2(value) {
+    return (value & (value - 1)) == 0;
+}
