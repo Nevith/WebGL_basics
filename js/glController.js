@@ -44,31 +44,6 @@ $(function()
     // Capture inputs to move camera
     bindCameraMovement(glCanvas);
 
-    // Demo object
-    let tla_start_x = -10;
-    let tla_konec_x = 10;
-    let tla_start_z = -10;
-    let tla_konec_z = 10;
-    let tla_y = -2;
-    let tla_positions = new Float32Array([
-        tla_start_x, tla_y, tla_start_z,
-        tla_konec_x, tla_y, tla_start_z,
-        tla_konec_x, tla_y, tla_konec_z,
-        tla_start_x, tla_y, tla_start_z,
-        tla_konec_x, tla_y, tla_konec_z,
-        tla_start_x, tla_y, tla_konec_z]);
-
-
-    drawables.push(glDrawable(
-        {
-            points: tla_positions,
-            name: "floor",
-        },
-        gl, shaderProgram));
-
-
-    createElementList(drawables);
-
     // Init draw
     gl.clearColor(1, 1, 1, 1);
     setInterval(draw, 33);
@@ -149,7 +124,7 @@ function draw()
     gl.useProgram(shaderProgram);
     gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "PV"), false, PV);
 
-    // Dra objects
+    // Draw objects
     for(let i = 0; i < drawables.length; ++i)
     {
         drawables[i].draw();
@@ -160,4 +135,77 @@ function draw()
     if (e) {
         console.log(`Error creating WebGL context: ${e.toString()}`);
     }
+}
+
+
+// Lets user choose a .obj file to display
+function fromObj()
+{
+    // Open file dialog that accepts .obj files
+    let input = $("<input type=\"file\" id=\"theFile\" accept=\".obj\"/>");
+    // On file selection
+    input.change(function () {
+        let file = input.prop("files")[0];
+        // If file selected
+        if (file) {
+            // Read file contents
+            let reader = new FileReader();
+            reader.readAsText(file, "UTF-8");
+            reader.onload = function (evt) {
+                // Parse .obj file
+                let objText = evt.target.result;
+                let obj =
+                    {
+                        vertices: [],
+                        textures: [],
+                        normals: [],
+                    };
+
+                let vertices = [];
+                let textures = [];
+                let normals = [];
+
+                objText = objText.split("\n");
+                for(let i = 0; i < objText.length; ++i)
+                {
+                    let data = objText[i].split(" ");
+                    // Parse vertex data
+                    if(data[0] == "v")
+                    {
+                        vertices.push([parseFloat(data[1]), parseFloat(data[2]), parseFloat(data[3])]);
+                    }
+                    // Parse uv data
+                    else if(data[0] == "vt")
+                    {
+                        textures.push([parseFloat(data[1]), parseFloat(data[2])]);
+                    }
+                    // Parse normal data
+                    else if(data[0] == "vn")
+                    {
+                        normals.push([parseFloat(data[1]), parseFloat(data[2]), parseFloat(data[3])]);
+                    }
+                    // Order vertices correctly
+                    else if(data[0] == "f")
+                    {
+                        for(let j = 1; j < 4; ++j)
+                        {
+                            let indexes = data[j].split("/");
+                            obj.vertices.push(vertices[parseInt(indexes[0]) - 1]);
+                            obj.textures.push(textures[parseInt(indexes[0]) - 1]);
+                            obj.normals.push(normals[parseInt(indexes[0]) - 1]);
+                        }
+                    }
+                }
+                obj.name = file.name.split(".")[0];
+                drawables.push(glDrawable(obj, gl, shaderProgram));
+                createElementList(drawables);   // Create UI for drawable object when parsed
+            };
+            reader.onerror = function (evt) {
+                console.log("Error opening file");
+            }
+        }
+
+    });
+    // Open dialog
+    input.trigger('click');
 }

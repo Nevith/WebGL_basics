@@ -1,54 +1,79 @@
 function glDrawable(data, gl, program)
 {
-    let points = data.points;
-    let name = data.name;
-
-    // let normals = data.normals;
-    // let color = data.color;
-
-    let vertices = gl.createBuffer();
-    let colors = gl.createBuffer();
-
-    // Bind buffer for vertices
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertices);
-    gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW);
-
-
-    let a = new Float32Array(points.length);
-    for(let i = 0; i < a.length; ++i)
-    {
-        a[i] = Math.random();
-    }
-
-    // Bind buffer for color
-    gl.bindBuffer(gl.ARRAY_BUFFER, colors);
-    gl.bufferData(gl.ARRAY_BUFFER, a, gl.STATIC_DRAW);
-
     // Create model matrix for transformations
     let modelMatrix = mat4.identity(mat4.create());
+    // Retrieve object's name
+    let name = data.name;
+    // Parse vertices normals and uvs to correct format for webGL
+    // Vertices
+    let vertices = new Float32Array(data.vertices.length*3);
+    for(let i = 0; i < vertices.length; ++i)
+    {
+        let index1 = Math.floor(i/3);
+        let index2 = i % 3;
+        vertices[i] = data.vertices[index1][index2];
+    }
+    // Normals
+    let normals = new Float32Array(data.normals.length*3);
+    for(let i = 0; i < normals.length; ++i)
+    {
+        let index1 = Math.floor(i/3);
+        let index2 = i % 3;
+        normals[i] = data.normals[index1][index2];
+    }
+    // Uvs
+    let uvs = new Float32Array(data.textures.length*2);
+    for(let i = 0; i < uvs.length; ++i)
+    {
+        let index1 = Math.floor(i/2);
+        let index2 = i % 2;
+        uvs[i] = data.textures[index1][index2];
+    }
+
+    // Create buffer on gpu
+    let glVertices = gl.createBuffer();
+    let glNormals = gl.createBuffer();
+    let glUvs = gl.createBuffer();
+
+    // Bind buffer for vertices
+    gl.bindBuffer(gl.ARRAY_BUFFER, glVertices);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+    // Bind buffer for normals
+    gl.bindBuffer(gl.ARRAY_BUFFER, glNormals);
+    gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW);
+
+    // Bind buffer for uvs
+    gl.bindBuffer(gl.ARRAY_BUFFER, glUvs);
+    gl.bufferData(gl.ARRAY_BUFFER, uvs, gl.STATIC_DRAW);
 
     // Retrieve attribute locations
-    let verticesLocation = gl.getAttribLocation(program, "vertices");
-    let colorLocation = gl.getAttribLocation(program, "colors");
-
+    let verticesLocation = gl.getAttribLocation(program, "vertex");
+    let normalLocation = gl.getAttribLocation(program, "normal");
+    let uvLocation = gl.getAttribLocation(program, "uv");
 
 
     let draw = function()
     {
         // vertices
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertices);
+        gl.bindBuffer(gl.ARRAY_BUFFER, glVertices);
         gl.vertexAttribPointer(verticesLocation, 3, gl.FLOAT, false, 3 * 4, 0);
         gl.enableVertexAttribArray(verticesLocation);
 
-        // texture
-        gl.bindBuffer(gl.ARRAY_BUFFER, colors);
-        gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 3 * 4, 0);
-        gl.enableVertexAttribArray(colorLocation);
+        // normals
+        gl.bindBuffer(gl.ARRAY_BUFFER, glNormals);
+        gl.vertexAttribPointer(normalLocation, 3, gl.FLOAT, false, 3 * 4, 0);
+        gl.enableVertexAttribArray(normalLocation);
+
+        // uvs
+        gl.bindBuffer(gl.ARRAY_BUFFER, glUvs);
+        gl.vertexAttribPointer(uvLocation, 2, gl.FLOAT, false, 2 * 4, 0);
+        gl.enableVertexAttribArray(uvLocation);
 
         // Model matrix
         gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "M"), false, modelMatrix);
 
-        gl.drawArrays(gl.TRIANGLES, 0, points.length / 3);
+        gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 3);
     };
 
     let rotate = function (angle, x, y, z) {
@@ -58,7 +83,6 @@ function glDrawable(data, gl, program)
     let translate = function(x, y, z)
     {
         modelMatrix = mat4.translate(mat4.create(), modelMatrix, vec3.fromValues(x, y, z));
-        console.log(modelMatrix);
     };
 
     let scale = function(x, y, z)
@@ -67,7 +91,6 @@ function glDrawable(data, gl, program)
     };
 
     return{
-        points : points,
         name: name,
         draw : draw,
         rotate: rotate,

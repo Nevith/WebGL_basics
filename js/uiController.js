@@ -14,20 +14,21 @@ function createElementList(drawables)
     for(let i = 0; i < drawables.length; ++i)
     {
         let obj = drawables[i];
+        // Title of UI element is the object's name
         objectContainer.append($("<div class='row'></div>"));
         objectContainer.append($(`<span style='font-size: 1em; font-weight: bold; padding-left: -5px'>${obj.name.toUpperCase()}</span>`));
 
+        // Add buttons in rows
         let currentRow = $("<div class='row'></div>");
-        console.log(objectContainer);
-        for(let i = 0; i < 14; ++i)
+        for(let j = 0; j < 15; ++j)
         {
-            console.log(objectContainer);
-            if((i % 6) == 0 && i != 0)
+            // Split buttons into groups of max 6
+            if((j % 6) == 0 && j != 0)
             {
                 objectContainer.append(currentRow);
                 currentRow = $("<div class='row'></div>");
             }
-            currentRow.append(getButton(i, obj));
+            currentRow.append(getButton(j, drawables, i));
         }
         objectContainer.append(currentRow);
         objectContainer.append($("<div class='row border_bottom'></div>"))
@@ -107,8 +108,9 @@ function getCameraMovement()
     return result;
 }
 
-function getButton(type, obj)
+function getButton(type, drawables, i)
 {
+    let obj = drawables[i];
     let icon = "";
     let cheat = 0;
     let params = {};
@@ -225,6 +227,19 @@ function getButton(type, obj)
         icon += "fa fa-angle-double-down";
         params.scale = 0.8;
         params.func = 3;
+    }
+    else if(type == cheat)
+    {
+        let button = $(`<button id='${obj.name}${type}' class=\"btn btn-danger\" style=\"margin: 5px; float: right; height: 30px; width: 30px; padding: 0;\">` +
+            `<span class=\"fa fa-times\"></span>` +
+            "</button>");
+        button.on("click", function () {
+            // Remove element
+            drawables.splice(i, 1);
+            // Redraw UI
+            createElementList(drawables);
+        });
+        return button;
     }
 
     let button = $(`<button id='${obj.name}${type}' class=\"btn btn-primary\" style=\"margin: 5px; float: left; height: 30px; width: 30px; padding: 0;\">` +
