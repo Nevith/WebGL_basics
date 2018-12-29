@@ -29,6 +29,7 @@
 
         <!-- Our code -->
         <script src="js/glDrawable.js"></script>
+        <script src="js/uiController.js"></script>
         <script src="js/glController.js"></script>
         <link rel="stylesheet" href="css/style.css">
 
@@ -39,8 +40,8 @@
             
             precision mediump float;
 
-            uniform mat4 PVM;
-            uniform mat4 model;
+            uniform mat4 PV;
+            uniform mat4 M;
 
             attribute vec3 vertices;
             attribute vec3 colors;
@@ -48,7 +49,7 @@
             varying vec3 verColor;
 
             void main(){
-                gl_Position=PVM * model * vec4(vertices,1);
+                gl_Position=PV * M * vec4(vertices,1);
                 verColor = colors;
             }
 
@@ -68,10 +69,31 @@
     <body>
         <div id="app" class="container">
             <div class="row">
-                <canvas id="gl_canvas" class="col" style="width:100%; height: 500px">
+                <canvas id="gl_canvas" class="col">
                     Your web browser does not support Canvas.
                 </canvas>
             </div>
-        </div>        
+            <div id="base_instructions" class="row">
+                <div id="camera_instructions" class="col">
+                    <h3>Camera</h3>
+                    <p>
+                        <b>Move:</b> W A S D + Q and E<br>
+                        <b>Rotate:</b> I J K L + U and O<br>
+                        <b>Perspective change:</b> Space<br>
+                    </p>
+                </div>
+                <div id="button_box">
+                    <button class="btn btn-primary" style="margin: 5px"
+                            onclick="">
+                        <span class="fa fa-plus"></span>
+                        <button class="btn btn-warning" style="margin: 5px"
+                                onclick="">
+                            <span class="fa fa-plus"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="object_container" class="container">
+        </div>
     </body>
 </html>

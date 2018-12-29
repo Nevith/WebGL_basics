@@ -3,6 +3,10 @@ let gl = null;
 let glCanvas = null;
 let shaderProgram = null;
 
+// Camera variables
+let viewMatrix = mat4.identity(mat4.create());
+let perspectiveMatrix = mat4.create();
+
 // Other globals
 let drawables = [];
 
@@ -37,15 +41,36 @@ $(function()
 
     // Compiles shaders builds shader program
     shaderProgram = buildShaderProgram(shaderSet);
+    // Capture inputs to move camera
+    bindCameraMovement(glCanvas);
 
-    // Demo triangle
-    drawables.push(glDrawable(new Float32Array([ -1, -1, 0, -1.5, 1, 0.0, -1.5, -1.5, 0.0 ]), gl, shaderProgram));
-    drawables.push(glDrawable(new Float32Array([ 1, 1, 0, 1.5, 1, 0.0, 1.5, 1.5, 0.0 ]), gl, shaderProgram));
-    drawables.push(glDrawable(new Float32Array([ 0, 0, 0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0 ]), gl, shaderProgram));
+    // Demo object
+    let tla_start_x = -10;
+    let tla_konec_x = 10;
+    let tla_start_z = -10;
+    let tla_konec_z = 10;
+    let tla_y = -2;
+    let tla_positions = new Float32Array([
+        tla_start_x, tla_y, tla_start_z,
+        tla_konec_x, tla_y, tla_start_z,
+        tla_konec_x, tla_y, tla_konec_z,
+        tla_start_x, tla_y, tla_start_z,
+        tla_konec_x, tla_y, tla_konec_z,
+        tla_start_x, tla_y, tla_konec_z]);
 
 
+    drawables.push(glDrawable(
+        {
+            points: tla_positions,
+            name: "floor",
+        },
+        gl, shaderProgram));
+
+
+    createElementList(drawables);
 
     // Init draw
+    gl.clearColor(1, 1, 1, 1);
     setInterval(draw, 33);
 });
 
@@ -99,25 +124,38 @@ function draw()
     // Clear buffer
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    // Create camera matrices
-    let proj_matrix = mat4.create();
-    mat4.perspective(proj_matrix, glMatrix.toRadian(80), glCanvas.width / glCanvas.height, 0.1, 1000);
-    let model_matrix = mat4.identity(mat4.create());
-    let view_matrix = mat4.create();
-    mat4.identity(view_matrix);
-    view_matrix = mat4.translate(mat4.create(), view_matrix, vec3.fromValues(0, 0, -2));
+    // Get camera position and perspective data
+    let cameraMovement = getCameraMovement();
 
-    // Calculate the pvm matrix
-    let PVM = mat4.multiply(mat4.create(), proj_matrix, mat4.multiply(mat4.create(), view_matrix, model_matrix));
+    // Generate perspective matrix
+    if(cameraMovement.perspective = NORMAL_PERSPECTIVE)
+    {
+        mat4.perspective(perspectiveMatrix, glMatrix.toRadian(75), glCanvas.width / glCanvas.height, 0.1, 10000);
+    }
+    else if(cameraMovement.perspective = ORTHO_PERSPECTIVE)
+    {
+        mat4.ortho(perspectiveMatrix, -4, -4, -4, -4, 0.1, 10);
+    }
+    // Transform camera perspective
+    viewMatrix = mat4.translate(mat4.create(), viewMatrix, vec3.fromValues(cameraMovement.camX, cameraMovement.camY, cameraMovement.camZ));
+    viewMatrix = mat4.rotate(mat4.create(), viewMatrix, glMatrix.toRadian(cameraMovement.camRotY), vec3.fromValues(0, 1, 0));
+    viewMatrix = mat4.rotate(mat4.create(), viewMatrix, glMatrix.toRadian(cameraMovement.camRotX), vec3.fromValues(1, 0, 0));
+    viewMatrix = mat4.rotate(mat4.create(), viewMatrix, glMatrix.toRadian(cameraMovement.camRotZ), vec3.fromValues(0, 0, 1));
 
+    // Calculate the PV matrix
+    let PV = mat4.multiply(mat4.create(), perspectiveMatrix, viewMatrix);
+
+    // Assign shaderProgram and camera matrices
     gl.useProgram(shaderProgram);
-    gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "PVM"), false, PVM);
+    gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "PV"), false, PV);
 
+    // Dra objects
     for(let i = 0; i < drawables.length; ++i)
     {
         drawables[i].draw();
     }
 
+    // Check for error
     let e = gl.getError();
     if (e) {
         console.log(`Error creating WebGL context: ${e.toString()}`);

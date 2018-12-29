@@ -1,3 +1,16 @@
+.btn-primary
+{
+    background-color: #00688B;
+    border-color: #00688B;
+}
+.btn-primary:hover{
+    background: #00464A;
+}
+.btn-primary:disabled {
+    background: #00688BEE;
+    border-color: #00688BEE;
+}
+
 body
 {
     background: #00688B;
@@ -9,14 +22,47 @@ body
 
 #app
 {
-    background: snow;
+    width: 70vw;
     min-height: 100vh;
-    padding-bottom: 5px;
+    padding: 5px;
 }
 
 #gl_canvas
 {
-    margin: 3px;
+    min-height: 80vh;
+    background: #00688B;
+}
+
+#base_instructions
+{
+    min-height: 15vh;
+}
+
+
+
+#app > .row
+{
+    margin: 2px;
     border: 1px solid #00688B;
+    border-radius: 5px;
+    background: snow;
+}
+
+#object_container
+{
+    position: absolute;
+    right: 10px;
+    top: 15px;
+
+    max-height: 80vh;
+    overflow: auto;
+    width: 15vw;
     background: white;
+    border: 2px solid #00688B;
+    border-radius: 5px;
+}
+
+.border_bottom
+{
+    border-bottom: 1px solid #00688B;
 }
