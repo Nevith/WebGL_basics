@@ -243,7 +243,6 @@ function getButton(type, drawables, i)
         button.on("click", function () {
             // Open file dialog that accepts .png and .jpg files
             let input = $("<input type=\"file\" accept=\"image/*\"/>");
-            console.log(input);
             // On file selection
             input.change(function () {
                 let file = input.prop("files")[0];
