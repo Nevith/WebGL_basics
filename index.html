@@ -112,13 +112,21 @@
                         <b>Perspective change:</b> Space<br>
                     </p>
                 </div>
-                <div id="button_box">
-                    <button class="btn btn-primary" style="margin: 5px"
+                <div class="col form-group">
+                    <h3> Light coordinates </h3>
+                    <label for="x_pos">X: </label>
+                    <input class="form-control-static" id="x_pos" type=number step=0.01 onchange="captureLightChange()"/>
+                    <br>
+                    <label for="y_pos">Y: </label>
+                    <input class="form-control-static" id="y_pos" type=number step=0.01 onchange="captureLightChange()"/>
+                    <br>
+                    <label for="z_pos">Z: </label>
+                    <input class="form-control-static" id="z_pos" type=number step=0.01 onchange="captureLightChange()"/>
+                </div>
+                <div id="button_box" class="col">
+                    <button class="btn btn-primary" style="margin: 5px; float: right"
                             onclick="selectObj()">
                         <span class="fa fa-plus"></span>
-                        <button class="btn btn-warning" style="margin: 5px"
-                                onclick="">
-                            <span class="fa fa-plus"></span>
                     </button>
                 </div>
             </div>

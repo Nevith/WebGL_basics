@@ -37,7 +37,7 @@ function createElementList(drawables)
 }
 
 
-function bindCameraMovement(canvas)
+function bindCameraMovement(canvas, light)
 {
     canvas.onkeydown = function keyDown(event) {
         switch (event.keyCode) {
@@ -91,6 +91,11 @@ function bindCameraMovement(canvas)
     };
     canvas.tabIndex = 1000;
     canvas.focus();
+
+    // Also inser light coordinates to ui
+    $("#x_pos").val(light[0]);
+    $("#y_pos").val(light[1]);
+    $("#z_pos").val(light[2]);
 }
 
 
@@ -320,4 +325,19 @@ function selectObj()
     });
     // Open dialog
     input.trigger('click');
+}
+
+
+// Capture users input for light coordinates
+function captureLightChange()
+{
+    let x_field = $("#x_pos");
+    let y_field = $("#y_pos");
+    let z_field = $("#z_pos");
+
+    let x = parseFloat(x_field.val());
+    let y = parseFloat(y_field.val());
+    let z = parseFloat(z_field.val());
+
+    moveLight(x, y, z);
 }

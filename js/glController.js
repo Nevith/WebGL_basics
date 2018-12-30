@@ -9,6 +9,7 @@ let perspectiveMatrix = mat4.create();
 
 // Other globals
 let drawables = [];
+let light = [0.0, 25.0, 0.0];
 
 
 // Runs on load
@@ -46,7 +47,7 @@ $(function()
     // Compiles shaders builds shader program
     shaderProgram = buildShaderProgram(shaderSet);
     // Capture inputs to move camera
-    bindCameraMovement(glCanvas);
+    bindCameraMovement(glCanvas, light);
 
     // Add floor as a preset object
     parseObj(floorObjText, "floor");
@@ -132,7 +133,7 @@ function draw()
     // Assign shaderProgram and camera matrices
     gl.useProgram(shaderProgram);
     // Add light
-    gl.uniform3f(gl.getUniformLocation(shaderProgram, "LIGHT"), 0, 20, 0);
+    gl.uniform3f(gl.getUniformLocation(shaderProgram, "LIGHT"), light[0], light[1], light[2]);
 
     // Draw objects
     for(let i = 0; i < drawables.length; ++i)
@@ -145,6 +146,15 @@ function draw()
     if (e) {
         console.log(`Error creating WebGL context: ${e.toString()}`);
     }
+}
+
+
+// Change light position
+function moveLight(x, y, z)
+{
+    light[0] = x;
+    light[1] = y;
+    light[2] = z;
 }
 
 
@@ -219,20 +229,15 @@ let floorObjText = "v 20.000000 -15.000000 -20.0000000\n" +
     "vn -1.0000 0.0000 0.0000\n" +
     "vn 0.0000 0.0000 -1.0000\n" +
     "vn 0.0000 0.0000 1.0000\n" +
-
     "f 1/1/1 2/3/1 3/2/1\n" +
     "f 3/2/1 4/4/1 1/1/1\n" +
     "f 5/1/2 6/3/2 7/2/2\n" +
     "f 7/2/2 8/4/2 5/1/2\n" +
-
     "f 1/1/3 5/3/3 2/2/3\n" +
     "f 2/2/3 6/4/3 5/1/3\n" +
-
     "f 1/1/4 5/3/4 4/2/4\n" +
     "f 4/2/4 8/4/4 5/1/4\n" +
-
     "f 4/1/5 8/3/5 3/2/5\n" +
     "f 3/2/5 7/4/5 8/1/5\n" +
-
     "f 3/1/6 7/3/6 2/2/6\n" +
     "f 2/2/6 6/4/6 7/1/6\n" ;
