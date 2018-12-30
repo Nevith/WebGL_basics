@@ -5,7 +5,7 @@ let shaderProgram = null;
 
 // Camera variables
 let viewMatrix = mat4.identity(mat4.create());
-let perspectiveMatrix = mat4.create();
+let perspectiveMatrix = mat4.create()
 
 // Other globals
 let drawables = [];
@@ -108,18 +108,16 @@ function draw()
     // Clear buffer
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-
     // Get camera position and perspective data
     let cameraMovement = getCameraMovement();
 
-    // Generate perspective matrix
-    if(cameraMovement.perspective = NORMAL_PERSPECTIVE)
+    if(cameraMovement.perspective == NORMAL_PERSPECTIVE)
     {
         mat4.perspective(perspectiveMatrix, glMatrix.toRadian(75), glCanvas.width / glCanvas.height, 0.1, 10000);
     }
-    else if(cameraMovement.perspective = ORTHO_PERSPECTIVE)
+    else if(cameraMovement.perspective == ORTHO_PERSPECTIVE)
     {
-        mat4.ortho(perspectiveMatrix, -4, -4, -4, -4, 0.1, 10);
+        mat4.ortho(perspectiveMatrix, -4, 4, -4, 4, 0.1, 10);
     }
     // Transform camera view coordinates
     viewMatrix = mat4.translate(mat4.create(), viewMatrix, vec3.fromValues(cameraMovement.camX, cameraMovement.camY, cameraMovement.camZ));
@@ -205,7 +203,6 @@ function parseObj(objText, name)
             }
         }
     }
-    console.log(obj);
     obj.name = name;
     drawables.push(glDrawable(obj, gl, shaderProgram));
     createElementList(drawables);   // Create UI for drawable object when parsed
