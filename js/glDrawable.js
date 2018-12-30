@@ -36,6 +36,14 @@ function glDrawable(data, gl, program)
         uvs[i] = data.textures[indexFirst][indexSecond];
     }
 
+    // Define koeficients and colors
+    let KA = 1.0;
+    let KD = 1.0;
+    let KS = 1.0;
+    let ambient_color = [0, 0, 0];
+    let diffuse_color = [0.5, 0.5, 0.5];
+    let specular_color = [0.5, 0.5, 0.5];
+
     // Create buffer on gpu
     let glVertices = gl.createBuffer();
     let glNormals = gl.createBuffer();
@@ -84,10 +92,18 @@ function glDrawable(data, gl, program)
         let PVM = mat4.multiply(mat4.create(), PV, modelMatrix);
 
         // uniforms
-        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "PVM"), false, PVM);
-        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "M"), false, modelMatrix);
-        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "M_INVERSE_TRANSPOSE"), false,
+        gl.uniformMatrix4fv(gl.getUniformLocation(program, "PVM"), false, PVM);
+        gl.uniformMatrix4fv(gl.getUniformLocation(program, "M"), false, modelMatrix);
+        gl.uniformMatrix4fv(gl.getUniformLocation(program, "M_INVERSE_TRANSPOSE"), false,
             mat4.transpose(mat4.create(), mat4.invert(mat4.create(), modelMatrix)));
+        // koeficient
+        gl.uniform1f(gl.getUniformLocation(program, "KA"), KA);
+        gl.uniform1f(gl.getUniformLocation(program, "KD"), KD);
+        gl.uniform1f(gl.getUniformLocation(program, "KS"), KS);
+        // colors
+        gl.uniform3f(gl.getUniformLocation(program, "ambient_color"), ambient_color[0], ambient_color[1], ambient_color[2]);
+        gl.uniform3f(gl.getUniformLocation(program, "diffuse_color"), diffuse_color[0], diffuse_color[1], diffuse_color[2]);
+        gl.uniform3f(gl.getUniformLocation(program, "specular_color"), specular_color[0], specular_color[1], specular_color[2]);
 
         // vertices
         gl.bindBuffer(gl.ARRAY_BUFFER, glVertices);

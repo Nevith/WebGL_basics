@@ -47,13 +47,20 @@
             uniform mat4 M_INVERSE_TRANSPOSE;
             uniform mat4 M;
 
+            uniform float KA;   // Ambient reflection coefficient
+            uniform float KD;   // Diffuse reflection coefficient
+            uniform float KS;   // Specular reflection coefficient
+
+            uniform vec3 ambient_color;
+            uniform vec3 diffuse_color;
+            uniform vec3 specular_color;
+
             attribute vec3 vertex;
             attribute vec3 normal;
             attribute vec2 uv;
 
             varying vec2 texture_coordinates;
-            varying vec3 normal_v;
-            varying vec3 surface_to_light;
+            varying vec3 light_weighting;
 
             void main(){
                 gl_Position= PVM * vec4(vertex,1);
@@ -62,13 +69,28 @@
                 texture_coordinates = uv;
 
                 // Compute normal
-                normal_v = mat3(M_INVERSE_TRANSPOSE) * normal;
+                vec3 normal_v = normalize(mat3(M_INVERSE_TRANSPOSE) * normal);
 
-                // Compute the world position of the surfoace
+                // Compute the world position of the surface
                 vec3 surface_world_position = (M * vec4(vertex,1)).xyz;
 
                 // Compute the vector of the surface to the light
-                surface_to_light = LIGHT - surface_world_position;
+                vec3 surface_to_light = normalize(LIGHT - surface_world_position);
+
+                // Calculate N dot L for diffuse lighting
+                float diffuse_light_weighting = max(dot(normal_v, surface_to_light), 0.0);
+                diffuse_light_weighting = diffuse_light_weighting * KD;
+
+                // Calculate the reflection vector (R) that is needed for specular light
+                vec3 reflection_vector = normalize(reflect(-surface_to_light, normal_v));
+
+                vec3 view_vector = -normalize(gl_Position.xyz);
+                float rdotv = max(dot(reflection_vector, view_vector), 0.0);
+                float specular_light_weighting = pow(rdotv, KS);
+
+                light_weighting = ambient_color * KA +
+                                 diffuse_color * diffuse_light_weighting +
+                                 specular_color * specular_light_weighting;
             }
 
         </script>
@@ -80,18 +102,13 @@
             uniform sampler2D sampler;
 
             varying vec2 texture_coordinates;
-            varying vec3 normal_v;
-            varying vec3 surface_to_light;
+            varying vec3 light_weighting;
 
             void main(){
-                gl_FragColor = texture2D(sampler, texture_coordinates);
+                vec4 texture = texture2D(sampler, texture_coordinates);
 
-                vec3 normal = normalize(normal_v);
-                vec3 surface = normalize(surface_to_light);
-
-                float light = dot(normal, surface);
-
-                gl_FragColor.rgb *= light;
+                // modulate texture color with light_weigthing and write as final color
+                gl_FragColor = vec4(light_weighting.rgb * texture.rgb, texture.a);
             }
         </script>
     </head>
