@@ -17,6 +17,10 @@ $(function()
     // Retrieve the canvas and gl context
     glCanvas = document.getElementById("gl_canvas");
     try {
+        // fix resolution and super sample!
+        glCanvas.width = $("#gl_canvas").width()*2;
+        glCanvas.height = $("#gl_canvas").height()*2;
+
         gl = glCanvas.getContext("webgl");
     } catch (e) {
         console.log(`Error creating WebGL context: ${e.toString()}`);
@@ -64,7 +68,7 @@ $(function()
     createElementList(drawables);   // Create UI for floor
 
     // Init draw
-    gl.clearColor(1, 1, 1, 1);
+    gl.clearColor(0.2, 0.2, 0.2, 1);
     setInterval(draw, 33);
 });
 
@@ -118,6 +122,7 @@ function draw()
     // Clear buffer
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+
     // Get camera position and perspective data
     let cameraMovement = getCameraMovement();
 
@@ -141,12 +146,13 @@ function draw()
 
     // Assign shaderProgram and camera matrices
     gl.useProgram(shaderProgram);
-    gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "PV"), false, PV);
+    // Add light
+    gl.uniform3f(gl.getUniformLocation(shaderProgram, "LIGHT"), 0, 20, 0);
 
     // Draw objects
     for(let i = 0; i < drawables.length; ++i)
     {
-        drawables[i].draw();
+        drawables[i].draw(PV);
     }
 
     // Check for error

@@ -79,8 +79,16 @@ function glDrawable(data, gl, program)
         pixel);
 
 
-    let draw = function()
+    let draw = function(PV)
     {
+        let PVM = mat4.multiply(mat4.create(), PV, modelMatrix);
+
+        // uniforms
+        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "PVM"), false, PVM);
+        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "PVM_INVERSE_TRANSPOSE"), false,
+            mat4.transpose(mat4.create(), mat4.invert(mat4.create(), PVM)));
+        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "M"), false, modelMatrix);
+
         // vertices
         gl.bindBuffer(gl.ARRAY_BUFFER, glVertices);
         gl.vertexAttribPointer(verticesLocation, 3, gl.FLOAT, false, 3 * 4, 0);
@@ -95,9 +103,6 @@ function glDrawable(data, gl, program)
         gl.bindBuffer(gl.ARRAY_BUFFER, glUvs);
         gl.vertexAttribPointer(uvLocation, 2, gl.FLOAT, false, 2 * 4, 0);
         gl.enableVertexAttribArray(uvLocation);
-
-        // Model matrix
-        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "M"), false, modelMatrix);
 
         // Texture
         gl.bindTexture(gl.TEXTURE_2D, texture);

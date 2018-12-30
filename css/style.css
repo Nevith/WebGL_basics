@@ -30,7 +30,8 @@ body
 #gl_canvas
 {
     min-height: 80vh;
-    background: #00688B;
+    background: snow;
+    padding: 1px;
 }
 
 #base_instructions
