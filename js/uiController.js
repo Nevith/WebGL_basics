@@ -2,7 +2,7 @@ let NORMAL_PERSPECTIVE = 20;
 let ORTHO_PERSPECTIVE = 21;
 
 // Define default camera position
-let camY = 0, camX = 0, camZ = 0;
+let camY = 0, camX = 0, camZ = -20;
 let camRotY = 0, camRotX = 0, camRotZ = 0;
 let perspective = NORMAL_PERSPECTIVE;
 

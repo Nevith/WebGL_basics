@@ -42,9 +42,9 @@
             
             precision mediump float;
 
-            uniform mat4 PVM;
-            uniform mat4 PVM_INVERSE_TRANSPOSE;
             uniform vec3 LIGHT;
+            uniform mat4 PVM;
+            uniform mat4 M_INVERSE_TRANSPOSE;
             uniform mat4 M;
 
             attribute vec3 vertex;
@@ -57,14 +57,17 @@
 
             void main(){
                 gl_Position= PVM * vec4(vertex,1);
-                texture_coordinates = uv;
-                normal_v = mat3(PVM_INVERSE_TRANSPOSE) * normal;
 
-                // compute the world position of the surfoace
+                // Pass on texture coordinates
+                texture_coordinates = uv;
+
+                // Compute normal
+                normal_v = mat3(M_INVERSE_TRANSPOSE) * normal;
+
+                // Compute the world position of the surfoace
                 vec3 surface_world_position = (M * vec4(vertex,1)).xyz;
 
-                // compute the vector of the surface to the light
-                // and pass it to the fragment shader
+                // Compute the vector of the surface to the light
                 surface_to_light = LIGHT - surface_world_position;
             }
 
@@ -83,7 +86,10 @@
             void main(){
                 gl_FragColor = texture2D(sampler, texture_coordinates);
 
-                float light = dot(normal_v, surface_to_light);
+                vec3 normal = normalize(normal_v);
+                vec3 surface = normalize(surface_to_light);
+
+                float light = dot(normal, surface);
 
                 gl_FragColor.rgb *= light;
             }

@@ -85,9 +85,9 @@ function glDrawable(data, gl, program)
 
         // uniforms
         gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "PVM"), false, PVM);
-        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "PVM_INVERSE_TRANSPOSE"), false,
-            mat4.transpose(mat4.create(), mat4.invert(mat4.create(), PVM)));
         gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "M"), false, modelMatrix);
+        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "M_INVERSE_TRANSPOSE"), false,
+            mat4.transpose(mat4.create(), mat4.invert(mat4.create(), modelMatrix)));
 
         // vertices
         gl.bindBuffer(gl.ARRAY_BUFFER, glVertices);
