@@ -31,6 +31,9 @@ $(function()
         return;
     }
     gl.enable(gl.DEPTH_TEST);   // Enable depth test
+    // Get extensions needed for Bump Mapping
+    gl.getExtension('OES_standard_derivatives');
+    gl.getExtension('EXT_shader_texture_lod');
     
     // Define shaders
     const shaderSet = [

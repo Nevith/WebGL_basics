@@ -21,7 +21,7 @@ function createElementList(drawables)
 
         // Add buttons in rows
         let currentRow = $("<div class='row'></div>");
-        for(let j = 0; j < 16; ++j)
+        for(let j = 0; j < 17; ++j)
         {
             // Split buttons into groups of max 6
             if((j % 6) == 0 && j != 0)
@@ -34,9 +34,9 @@ function createElementList(drawables)
         objectContainer.append(currentRow);
 
         let lightingParams = $("<div class='row'></div>");
-        lightingParams.append($("<div class='col'>Ambient</div>"));
-        lightingParams.append($("<div class='col'>Diffuse</div>"));
-        lightingParams.append($("<div class='col'>Specular</div>"));
+        lightingParams.append($("<div class='col' style='width: 63px;'>Ambient</div>"));
+        lightingParams.append($("<div class='col' style='width: 63px;'>Diffuse</div>"));
+        lightingParams.append($("<div class='col' style='width: 63px;'>Specular</div>"));
         let colorPickers = $("<div class='row'></div>");
         let coefficientPickers = $("<div class='row'></div>");
         let lightParams = obj.getLightParams();
@@ -63,21 +63,21 @@ function createElementList(drawables)
         colorPickers.append($("<div class='col'></div>").append(specularColor));
 
 
-        let ambientCoefficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
+        let ambientCoefficient = $("<input type='number' step='0.1' min='0' max='1' style='width: 63px'/>");
         ambientCoefficient.val(lightParams.ambient.coefficient);
         ambientCoefficient.on("change", function (event) {
             obj.setCoefficient(0, parseFloat(event.target.value));
         });
         coefficientPickers.append($("<div class='col' style='margin-bottom: 5px'></div>").append(ambientCoefficient));
 
-        let diffuseCoefficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
+        let diffuseCoefficient = $("<input type='number' step='0.1' min='0' max='1' style='width: 63px'/>");
         diffuseCoefficient.val(lightParams.diffuse.coefficient);
         diffuseCoefficient.on("change", function (event) {
             obj.setCoefficient(1, parseFloat(event.target.value));
         });
         coefficientPickers.append($("<div class='col'></div>").append(diffuseCoefficient));
 
-        let specularCoefficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
+        let specularCoefficient = $("<input type='number' step='0.1' min='0' max='1' style='width: 63px'/>");
         specularCoefficient.val(lightParams.specular.coefficient);
         specularCoefficient.on("change", function (event) {
             obj.setCoefficient(2, parseFloat(event.target.value));
@@ -314,6 +314,37 @@ function getButton(type, drawables, i)
                         // Get the img data
                         let imgData = evt.target.result;
                         obj.loadTexture(imgData);
+                    };
+                    reader.onerror = function (evt) {
+                        console.log("Error opening file");
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            // Open dialog
+            input.trigger('click');
+        });
+        return button;
+    }
+    else if(type == cheat++)
+    {
+        let button = $(`<button id='${obj.name}${type}' class=\"btn btn-warning\" style=\"margin: 5px; float: left; height: 30px; width: 30px; padding: 0;\">` +
+            `<span class=\"fa fa-map\"></span>` +
+            "</button>");
+        button.on("click", function () {
+            // Open file dialog that accepts .png and .jpg files
+            let input = $("<input type=\"file\" accept=\"image/*\"/>");
+            // On file selection
+            input.change(function () {
+                let file = input.prop("files")[0];
+                // If file selected
+                if (file) {
+                    // Read file contents
+                    let reader = new FileReader();
+                    reader.onload = function (evt) {
+                        // Get the img data
+                        let imgData = evt.target.result;
+                        obj.loadNormalMap(imgData);
                     };
                     reader.onerror = function (evt) {
                         console.log("Error opening file");

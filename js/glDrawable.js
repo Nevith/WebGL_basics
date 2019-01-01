@@ -66,6 +66,8 @@ function glDrawable(data, gl, program)
     let normalLocation = gl.getAttribLocation(program, "normal");
     let uvLocation = gl.getAttribLocation(program, "uv");
     let samplerLocation = gl.getUniformLocation(program, 'sampler');
+    let normalSamplerLocation = gl.getUniformLocation(program, 'normal_sampler');
+
 
     // Texture
     const texture = gl.createTexture();
@@ -85,6 +87,15 @@ function glDrawable(data, gl, program)
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
         width, height, border, srcFormat, srcType,
         pixel);
+
+
+    // Normal
+    const normalMap = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, normalMap);
+    const normalPixel = new Uint8Array([1, 1, 1, 255]);  // opaque grey
+    gl.texImage2D(gl.TEXTURE_2D, 1, internalFormat,
+        width, height, border, srcFormat, srcType,
+        normalPixel);
 
 
     let draw = function(PV)
@@ -120,6 +131,23 @@ function glDrawable(data, gl, program)
         gl.vertexAttribPointer(uvLocation, 2, gl.FLOAT, false, 2 * 4, 0);
         gl.enableVertexAttribArray(uvLocation);
 
+        // Tell WebGL we want to affect texture unit 1
+        gl.activeTexture(gl.TEXTURE1);
+        // Normal map
+        gl.bindTexture(gl.TEXTURE_2D, normalMap);
+        // gl.NEAREST is also allowed, instead of gl.LINEAR, as neither mipmap.
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        // Prevents s-coordinate wrapping (repeating).
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        // Prevents t-coordinate wrapping (repeating).
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        // Bind the texture to texture unit 1
+        gl.bindTexture(gl.TEXTURE_2D, normalMap);
+        // Tell the shader we bound the texture to texture unit 0
+        gl.uniform1i(normalSamplerLocation, 1);
+
+        // Tell WebGL we want to affect texture unit 0
+        gl.activeTexture(gl.TEXTURE0);
         // Texture
         gl.bindTexture(gl.TEXTURE_2D, texture);
         // gl.NEAREST is also allowed, instead of gl.LINEAR, as neither mipmap.
@@ -128,9 +156,6 @@ function glDrawable(data, gl, program)
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         // Prevents t-coordinate wrapping (repeating).
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-        // Tell WebGL we want to affect texture unit 0
-        gl.activeTexture(gl.TEXTURE0);
         // Bind the texture to texture unit 0
         gl.bindTexture(gl.TEXTURE_2D, texture);
         // Tell the shader we bound the texture to texture unit 0
@@ -157,6 +182,30 @@ function glDrawable(data, gl, program)
         const image = new Image();
         image.onload = function() {
             gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                srcFormat, srcType, image);
+
+            // WebGL1 has different requirements for power of 2 images
+            // vs non power of 2 images so check if the image is a
+            // power of 2 in both dimensions.
+            if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+                // Yes, it's a power of 2. Generate mips.
+                gl.generateMipmap(gl.TEXTURE_2D);
+            } else {
+                // No, it's not a power of 2. Turn off mips and set
+                // wrapping to clamp to edge
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            }
+        };
+        image.src = dataUrl;
+    };
+
+    let loadNormalMap = function(dataUrl) {
+        const image = new Image();
+        image.onload = function() {
+            gl.bindTexture(gl.TEXTURE_2D, normalMap);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
                 srcFormat, srcType, image);
 
@@ -234,6 +283,7 @@ function glDrawable(data, gl, program)
         setColor: setColor,
         setCoefficient: setCoefficient,
         getLightParams: getLightParams,
+        loadNormalMap: loadNormalMap,
     }
 
 }
