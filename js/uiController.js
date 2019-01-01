@@ -32,6 +32,61 @@ function createElementList(drawables)
             currentRow.append(getButton(j, drawables, i));
         }
         objectContainer.append(currentRow);
+
+        let lightingParams = $("<div class='row'></div>");
+        lightingParams.append($("<div class='col'>Ambient</div>"));
+        lightingParams.append($("<div class='col'>Diffuse</div>"));
+        lightingParams.append($("<div class='col'>Specular</div>"));
+        let colorPickers = $("<div class='row'></div>");
+        let koeficientPickers = $("<div class='row'></div>");
+        let lightParams = obj.getLightParams();
+
+        let ambiientColor = $(`<input type='color' value="${rgbToHex(lightParams.ambient.color)}" style='width: 63px;'/>`);
+        ambiientColor.value = rgbToHex(lightParams.ambient.color);
+        ambiientColor.on("change", function (event) {
+            obj.setColor(0, hexToRgb(event.target.value));
+        });
+        colorPickers.append($("<div class='col'></div>").append(ambiientColor));
+
+        let diffuseColor = $(`<input type='color' value=\"${rgbToHex(lightParams.diffuse.color)}\" style='width: 63px;'/>`);
+        diffuseColor.value = rgbToHex(lightParams.diffuse.color);
+        diffuseColor.on("change", function (event) {
+            obj.setColor(1, hexToRgb(event.target.value));
+        });
+        colorPickers.append($("<div class='col'></div>").append(diffuseColor));
+
+        let specularColor = $(`<input type='color' value=\"${rgbToHex(lightParams.specular.color)}\" style='width: 63px;'/>`);
+        specularColor.value = rgbToHex(lightParams.specular.color);
+        specularColor.on("change", function (event) {
+            obj.setColor(2, hexToRgb(event.target.value));
+        });
+        colorPickers.append($("<div class='col'></div>").append(specularColor));
+
+
+        let ambiientKoeficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
+        ambiientKoeficient.val(lightParams.ambient.koef);
+        ambiientKoeficient.on("change", function (event) {
+            obj.setKoef(0, parseFloat(event.target.value));
+        });
+        koeficientPickers.append($("<div class='col' style='margin-bottom: 5px'></div>").append(ambiientKoeficient));
+
+        let diffuseKoeficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
+        diffuseKoeficient.val(lightParams.diffuse.koef);
+        diffuseKoeficient.on("change", function (event) {
+            obj.setKoef(1, parseFloat(event.target.value));
+        });
+        koeficientPickers.append($("<div class='col'></div>").append(diffuseKoeficient));
+
+        let specularKoeficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
+        specularKoeficient.val(lightParams.specular.koef);
+        specularKoeficient.on("change", function (event) {
+            obj.setKoef(2, parseFloat(event.target.value));
+        });
+        koeficientPickers.append($("<div class='col'></div>").append(specularKoeficient));
+
+        objectContainer.append(lightingParams);
+        objectContainer.append(colorPickers);
+        objectContainer.append(koeficientPickers);
         objectContainer.append($("<div class='row border_bottom'></div>"))
     }
 }
@@ -340,4 +395,29 @@ function captureLightChange()
     let z = parseFloat(z_field.val());
 
     moveLight(x, y, z);
+}
+
+// Convert color picker value to rgb
+function hexToRgb(hex) {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+        return r + r + g + g + b + b;
+    });
+
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [
+        parseInt(result[1], 16) / 255,
+        parseInt(result[2], 16) / 255,
+        parseInt(result[3], 16) / 255
+    ] : null;
+}
+// Convert rgb to color picker
+function componentToHex(c) {
+    let hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+function rgbToHex(rgb) {
+    rgb = [Math.round(rgb[0]*255), Math.round(rgb[1]*255), Math.round(rgb[2]*255)];
+    return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
 }

@@ -41,8 +41,8 @@ function glDrawable(data, gl, program)
     let KD = 1.0;
     let KS = 1.0;
     let ambient_color = [0, 0, 0];
-    let diffuse_color = [0.5, 0.5, 0.5];
-    let specular_color = [0.5, 0.5, 0.5];
+    let diffuse_color = [1, 1, 0.5];
+    let specular_color = [1, 1, 1];
 
     // Create buffer on gpu
     let glVertices = gl.createBuffer();
@@ -176,6 +176,53 @@ function glDrawable(data, gl, program)
         };
         image.src = dataUrl;
     };
+    
+    let setColor = function (type, color) {
+          if(type == 0)
+          {
+            ambient_color = color;
+          }
+          else if(type == 1)
+          {
+            diffuse_color = color;
+          }
+          else if(type == 2)
+          {
+            specular_color = color;
+          }
+    };
+
+    let setKoef = function (type, koef) {
+        if(type == 0)
+        {
+            KA = koef;
+        }
+        else if(type == 1)
+        {
+            KD = koef;
+        }
+        else if(type == 2)
+        {
+            KS = koef;
+        }
+    };
+
+    let getLightParams = function () {
+        return{
+            ambient: {
+                color: ambient_color,
+                koef: KA
+            },
+            diffuse: {
+                color: diffuse_color,
+                koef: KD
+            },
+            specular: {
+                color: specular_color,
+                koef: KS
+            }
+        }
+    };
 
     return{
         name: name,
@@ -184,6 +231,9 @@ function glDrawable(data, gl, program)
         translate: translate,
         scale: scale,
         loadTexture: loadTexture,
+        setColor: setColor,
+        setKoef: setKoef,
+        getLightParams: getLightParams,
     }
 
 }
