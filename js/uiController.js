@@ -38,15 +38,15 @@ function createElementList(drawables)
         lightingParams.append($("<div class='col'>Diffuse</div>"));
         lightingParams.append($("<div class='col'>Specular</div>"));
         let colorPickers = $("<div class='row'></div>");
-        let koeficientPickers = $("<div class='row'></div>");
+        let coefficientPickers = $("<div class='row'></div>");
         let lightParams = obj.getLightParams();
 
-        let ambiientColor = $(`<input type='color' value="${rgbToHex(lightParams.ambient.color)}" style='width: 63px;'/>`);
-        ambiientColor.value = rgbToHex(lightParams.ambient.color);
-        ambiientColor.on("change", function (event) {
+        let ambientColor = $(`<input type='color' value="${rgbToHex(lightParams.ambient.color)}" style='width: 63px;'/>`);
+        ambientColor.value = rgbToHex(lightParams.ambient.color);
+        ambientColor.on("change", function (event) {
             obj.setColor(0, hexToRgb(event.target.value));
         });
-        colorPickers.append($("<div class='col'></div>").append(ambiientColor));
+        colorPickers.append($("<div class='col'></div>").append(ambientColor));
 
         let diffuseColor = $(`<input type='color' value=\"${rgbToHex(lightParams.diffuse.color)}\" style='width: 63px;'/>`);
         diffuseColor.value = rgbToHex(lightParams.diffuse.color);
@@ -63,30 +63,30 @@ function createElementList(drawables)
         colorPickers.append($("<div class='col'></div>").append(specularColor));
 
 
-        let ambiientKoeficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
-        ambiientKoeficient.val(lightParams.ambient.koef);
-        ambiientKoeficient.on("change", function (event) {
-            obj.setKoef(0, parseFloat(event.target.value));
+        let ambientCoefficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
+        ambientCoefficient.val(lightParams.ambient.coefficient);
+        ambientCoefficient.on("change", function (event) {
+            obj.setCoefficient(0, parseFloat(event.target.value));
         });
-        koeficientPickers.append($("<div class='col' style='margin-bottom: 5px'></div>").append(ambiientKoeficient));
+        coefficientPickers.append($("<div class='col' style='margin-bottom: 5px'></div>").append(ambientCoefficient));
 
-        let diffuseKoeficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
-        diffuseKoeficient.val(lightParams.diffuse.koef);
-        diffuseKoeficient.on("change", function (event) {
-            obj.setKoef(1, parseFloat(event.target.value));
+        let diffuseCoefficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
+        diffuseCoefficient.val(lightParams.diffuse.coefficient);
+        diffuseCoefficient.on("change", function (event) {
+            obj.setCoefficient(1, parseFloat(event.target.value));
         });
-        koeficientPickers.append($("<div class='col'></div>").append(diffuseKoeficient));
+        coefficientPickers.append($("<div class='col'></div>").append(diffuseCoefficient));
 
-        let specularKoeficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
-        specularKoeficient.val(lightParams.specular.koef);
-        specularKoeficient.on("change", function (event) {
-            obj.setKoef(2, parseFloat(event.target.value));
+        let specularCoefficient = $("<input type='number' step='0.1' min='0' max='1' style='max-width: 63px'/>");
+        specularCoefficient.val(lightParams.specular.coefficient);
+        specularCoefficient.on("change", function (event) {
+            obj.setCoefficient(2, parseFloat(event.target.value));
         });
-        koeficientPickers.append($("<div class='col'></div>").append(specularKoeficient));
+        coefficientPickers.append($("<div class='col'></div>").append(specularCoefficient));
 
         objectContainer.append(lightingParams);
         objectContainer.append(colorPickers);
-        objectContainer.append(koeficientPickers);
+        objectContainer.append(coefficientPickers);
         objectContainer.append($("<div class='row border_bottom'></div>"))
     }
 }

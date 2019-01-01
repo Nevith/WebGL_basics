@@ -36,7 +36,7 @@ function glDrawable(data, gl, program)
         uvs[i] = data.textures[indexFirst][indexSecond];
     }
 
-    // Define koeficients and colors
+    // Define coefficients and colors
     let KA = 1.0;
     let KD = 1.0;
     let KS = 1.0;
@@ -81,7 +81,7 @@ function glDrawable(data, gl, program)
     const border = 0;
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
-    const pixel = new Uint8Array([0, 0, 255, 255]);  // opaque blue
+    const pixel = new Uint8Array([100, 100, 100, 255]);  // opaque grey
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
         width, height, border, srcFormat, srcType,
         pixel);
@@ -96,7 +96,7 @@ function glDrawable(data, gl, program)
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "M"), false, modelMatrix);
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "M_INVERSE_TRANSPOSE"), false,
             mat4.transpose(mat4.create(), mat4.invert(mat4.create(), modelMatrix)));
-        // koeficient
+        // coefficients
         gl.uniform1f(gl.getUniformLocation(program, "KA"), KA);
         gl.uniform1f(gl.getUniformLocation(program, "KD"), KD);
         gl.uniform1f(gl.getUniformLocation(program, "KS"), KS);
@@ -192,18 +192,18 @@ function glDrawable(data, gl, program)
           }
     };
 
-    let setKoef = function (type, koef) {
+    let setCoefficient = function (type, coefficient) {
         if(type == 0)
         {
-            KA = koef;
+            KA = coefficient;
         }
         else if(type == 1)
         {
-            KD = koef;
+            KD = coefficient;
         }
         else if(type == 2)
         {
-            KS = koef;
+            KS = coefficient;
         }
     };
 
@@ -211,15 +211,15 @@ function glDrawable(data, gl, program)
         return{
             ambient: {
                 color: ambient_color,
-                koef: KA
+                coefficient: KA
             },
             diffuse: {
                 color: diffuse_color,
-                koef: KD
+                coefficient: KD
             },
             specular: {
                 color: specular_color,
-                koef: KS
+                coefficient: KS
             }
         }
     };
@@ -232,7 +232,7 @@ function glDrawable(data, gl, program)
         scale: scale,
         loadTexture: loadTexture,
         setColor: setColor,
-        setKoef: setKoef,
+        setCoefficient: setCoefficient,
         getLightParams: getLightParams,
     }
 
