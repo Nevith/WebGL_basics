@@ -101,7 +101,7 @@ function createElementList(drawables)
             "</select>");
         modeSlect.on("change", function (event) {
             obj.setMappingMode(event.target.value);
-            if(event.target.value==0)
+            if(event.target.value == 0)
             {
                 axisSlect.hide();
             }
@@ -118,7 +118,7 @@ function createElementList(drawables)
         axisSlect.on("change", function (event) {
             obj.setMappingAxis(event.target.value);
         });
-        if(mappingParams.uvMode==0)
+        if(mappingParams.uvMode == 0)
         {
             axisSlect.hide();
         }
@@ -128,7 +128,7 @@ function createElementList(drawables)
         uvParameters.append(axisSlect);
         objectContainer.append(uvParameters);
 
-        objectContainer.append($("<div class='row border_bottom'></div>"))
+        objectContainer.append($("<div class='row border_bottom'></div>"));
     }
 }
 
