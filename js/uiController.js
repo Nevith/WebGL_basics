@@ -16,8 +16,8 @@ function createElementList(drawables)
     {
         let obj = drawables[i];
         // Title of UI element is the object's name
-        objectContainer.append($("<div class='row'></div>"));
-        objectContainer.append($(`<span style='font-size: 1em; font-weight: bold; padding-left: -5px'>${i+1} ${obj.name.toUpperCase()}</span>`));
+        objectContainer.append($(`<div class='row'><span style='font-weight: bold; margin-left: 5px;'>${i+1} ${obj.name.toUpperCase()}</span></div>`));
+        //objectContainer.append($(``));
 
         // Add buttons in rows
         let currentRow = $("<div class='row'></div>");
@@ -33,6 +33,7 @@ function createElementList(drawables)
         }
         objectContainer.append(currentRow);
 
+        // Add UI for lighting parameters
         let lightingParams = $("<div class='row'></div>");
         lightingParams.append($("<div class='col' style='width: 63px;'>Ambient</div>"));
         lightingParams.append($("<div class='col' style='width: 63px;'>Diffuse</div>"));
@@ -41,6 +42,7 @@ function createElementList(drawables)
         let coefficientPickers = $("<div class='row'></div>");
         let lightParams = obj.getLightParams();
 
+        // Color pickers
         let ambientColor = $(`<input type='color' value="${rgbToHex(lightParams.ambient.color)}" style='width: 63px;'/>`);
         ambientColor.value = rgbToHex(lightParams.ambient.color);
         ambientColor.on("change", function (event) {
@@ -62,7 +64,7 @@ function createElementList(drawables)
         });
         colorPickers.append($("<div class='col'></div>").append(specularColor));
 
-
+        // Coefficients
         let ambientCoefficient = $("<input type='number' step='0.1' min='0' max='1' style='width: 63px'/>");
         ambientCoefficient.val(lightParams.ambient.coefficient);
         ambientCoefficient.on("change", function (event) {
@@ -83,10 +85,49 @@ function createElementList(drawables)
             obj.setCoefficient(2, parseFloat(event.target.value));
         });
         coefficientPickers.append($("<div class='col'></div>").append(specularCoefficient));
-
+        // Append to the drawable UI
         objectContainer.append(lightingParams);
         objectContainer.append(colorPickers);
         objectContainer.append(coefficientPickers);
+
+        // Texture mapping parameters
+        let mappingParams = obj.getMappingParams();
+        let uvParameters = $("<div class='row'>");
+        let modeSlect = $("<select class='col'>" +
+            `<option value='0' ${mappingParams.uvMode==0 ? "selected" : ""}>default</option>` +
+            `<option value='1' ${mappingParams.uvMode==1 ? "selected" : ""}>plane</option>` +
+            `<option value='2' ${mappingParams.uvMode==2 ? "selected" : ""}>cylindrical</option>` +
+            `<option value='3' ${mappingParams.uvMode==3 ? "selected" : ""}>spherical</option>` +
+            "</select>");
+        modeSlect.on("change", function (event) {
+            obj.setMappingMode(event.target.value);
+            if(event.target.value==0)
+            {
+                axisSlect.hide();
+            }
+            else
+            {
+                axisSlect.show();
+            }
+        });
+        let axisSlect = $("<select class='col'>" +
+            `<option value='0' ${mappingParams.uvAxis==0 ? "selected" : ""}>X</option>` +
+            `<option value='1' ${mappingParams.uvAxis==1 ? "selected" : ""}>Y</option>` +
+            `<option value='2' ${mappingParams.uvAxis==2 ? "selected" : ""}>Z</option>` +
+            "</select>");
+        axisSlect.on("change", function (event) {
+            obj.setMappingAxis(event.target.value);
+        });
+        if(mappingParams.uvMode==0)
+        {
+            axisSlect.hide();
+        }
+        // Append to the drawable UI
+        objectContainer.append($(`<div class='row'><span style='font-weight: bold; margin-left: 5px;'>UV Mapping</span></div>`));
+        uvParameters.append(modeSlect);
+        uvParameters.append(axisSlect);
+        objectContainer.append(uvParameters);
+
         objectContainer.append($("<div class='row border_bottom'></div>"))
     }
 }
@@ -147,7 +188,7 @@ function bindCameraMovement(canvas, light)
     canvas.tabIndex = 1000;
     canvas.focus();
 
-    // Also inser light coordinates to ui
+    // Also insert light coordinates into text fields as preset value
     $("#x_pos").val(light[0]);
     $("#y_pos").val(light[1]);
     $("#z_pos").val(light[2]);
@@ -414,7 +455,7 @@ function selectObj()
 }
 
 
-// Capture users input for light coordinates
+// Capture user's input for light coordinates
 function captureLightChange()
 {
     let x_field = $("#x_pos");
@@ -428,7 +469,8 @@ function captureLightChange()
     moveLight(x, y, z);
 }
 
-// Convert color picker value to rgb
+
+// Convert hex(color picker) value to rgb
 function hexToRgb(hex) {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
     let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
@@ -443,11 +485,12 @@ function hexToRgb(hex) {
         parseInt(result[3], 16) / 255
     ] : null;
 }
-// Convert rgb to color picker
+// Convert single r/g/b value to hex
 function componentToHex(c) {
     let hex = c.toString(16);
     return hex.length == 1 ? "0" + hex : hex;
 }
+// Convert rgb value to hex(color picker) value
 function rgbToHex(rgb) {
     rgb = [Math.round(rgb[0]*255), Math.round(rgb[1]*255), Math.round(rgb[2]*255)];
     return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);

@@ -44,6 +44,12 @@
             uniform mat4 M_INVERSE_TRANSPOSE;
             uniform mat4 M;
 
+            uniform float texture_mode;
+            uniform float texture_axis;
+            uniform vec3 b_max;
+            uniform vec3 b_min;
+            uniform vec3 d;
+
             attribute vec3 vertex;
             attribute vec3 normal;
             attribute vec2 uv;
@@ -53,8 +59,86 @@
             varying vec3 vert_pos;
 
             void main(){
-                // Pass on texture coordinates
-                texture_coordinates = uv;
+                // Calculate uvs based on mode
+                texture_coordinates = uv;   // default
+                // Plane
+                if(texture_mode == 1.0)
+                {
+                    // X axis
+                    if(texture_axis == 0.0)
+                    {
+                        texture_coordinates[0] = (vertex[2] - b_min[2]) / d[2];
+                        texture_coordinates[1] = (vertex[1] - b_min[1]) / d[1];
+                    }
+                    // Y axis
+                    else if(texture_axis == 1.0)
+                    {
+                        texture_coordinates[0] = (vertex[0] - b_min[0]) / d[0];
+                        texture_coordinates[1] = (vertex[2] - b_min[2]) / d[2];
+                    }
+                    // Z axis
+                    else if(texture_axis == 2.0)
+                    {
+                        texture_coordinates[0] = (vertex[0] - b_min[0]) / d[0];
+                        texture_coordinates[1] = (vertex[1] - b_min[1]) / d[1];
+                    }
+
+                }
+                // Cylindrical
+                else if(texture_mode == 2.0)
+                {
+                    vec3 center = b_min + d/2.0;
+                    vec3 v = vertex - center;
+                    float angle = 0.0;
+                    // X axis
+                    if(texture_axis == 0.0)
+                    {
+                        angle = degrees(atan(v[1] , v[2])) + 180.0;
+                        texture_coordinates[1] = v[0]/d[0] + 1.0/2.0;
+                    }
+                    // Y axis
+                    else if(texture_axis == 1.0)
+                    {
+                        angle = degrees(atan(v[2] , v[0])) + 180.0;
+                        texture_coordinates[1] = v[1]/d[1] + 1.0/2.0;
+                    }
+                    // Z axis
+                    else if(texture_axis == 2.0)
+                    {
+                        angle = degrees(atan(v[1] , v[0])) + 180.0;
+                        texture_coordinates[1] = v[2]/d[2] + 1.0/2.0;
+                    }
+                    texture_coordinates[0] = angle / 360.0;
+                }
+                // Spherical
+                else if(texture_mode == 3.0)
+                {
+                    vec3 center = b_min + d/2.0;
+                    vec3 v = vertex - center;
+                    float angle_u = 0.0;
+                    float angle_v = 0.0;
+                    // X axis
+                    if(texture_axis == 0.0)
+                    {
+                        angle_u = degrees(atan(v[1] , v[2])) + 180.0;
+                        angle_v = degrees(asin(v[0]/length(v)));
+                    }
+                    // Y axis
+                    else if(texture_axis == 1.0)
+                    {
+                        angle_u = degrees(atan(v[2] , v[0])) + 180.0;
+                        angle_v = degrees(asin(v[1]/length(v)));
+                    }
+                    // Z axis
+                    else if(texture_axis == 2.0)
+                    {
+                        angle_u = degrees(atan(v[1] , v[0])) + 180.0;
+                        angle_v = degrees(asin(v[2]/length(v)));
+                    }
+                    texture_coordinates[0] = angle_u / 360.0;
+                    texture_coordinates[1] = angle_v / 180.0 + 1.0/2.0;
+                }
+
                 // Set vertex position
                 gl_Position= PVM * vec4(vertex,1);
 
@@ -63,9 +147,6 @@
                 // Compute the world position of the surface
                 vec4 vertex4 = M * vec4(vertex, 1.0);
                 vert_pos = vec3(vertex4) / vertex4.w;
-
-                // pass on texture coordinates
-                texture_coordinates = uv;
             }
 
         </script>
@@ -163,6 +244,10 @@
                     <button class="btn btn-primary" style="margin: 5px; float: right"
                             onclick="selectObj()">
                         <span class="fa fa-plus"></span>
+                    </button>
+                    <button class="btn btn-warning" style="margin: 5px; float: right"
+                            onclick="location.reload();">
+                        <span class="fa fa-refresh"></span>
                     </button>
                 </div>
             </div>

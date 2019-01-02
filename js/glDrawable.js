@@ -6,13 +6,28 @@ function glDrawable(data, gl, program)
     let name = data.name;
     // Parse vertices normals and uvs to correct format for webGL
     // Vertices
+    // Also find the minimum and maximum coordinates to box the object
+    let bMax = [Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER];
+    let bMin = [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
     let vertices = new Float32Array(data.vertices.length*3);
     for(let i = 0; i < vertices.length; ++i)
     {
         let indexFirst = Math.floor(i/3);
         let indexSecond = i % 3;
         vertices[i] = data.vertices[indexFirst][indexSecond];
+        // Check if new biggest coordinate
+        if(data.vertices[indexFirst][indexSecond] > bMax[indexSecond])
+        {
+            bMax[indexSecond] = data.vertices[indexFirst][indexSecond];
+        }
+        // Check if new smallest coordinate
+        else if(data.vertices[indexFirst][indexSecond] < bMin[indexSecond])
+        {
+            bMin[indexSecond] = data.vertices[indexFirst][indexSecond];
+        }
     }
+    // Calculate vector d = b_max - b_min
+    let distance = [bMax[0] - bMin[0], bMax[1] - bMin[1], bMax[2] - bMin[2]];
     // Normals
     let normals = new Float32Array(data.normals.length*3);
     for(let i = 0; i < normals.length; ++i)
@@ -44,30 +59,32 @@ function glDrawable(data, gl, program)
     let diffuse_color = [1, 1, 0.5];
     let specular_color = [1, 1, 1];
 
-    // Create buffer on gpu
+    // Create buffers on gpu
     let glVertices = gl.createBuffer();
     let glNormals = gl.createBuffer();
     let glUvs = gl.createBuffer();
 
-    // Bind buffer for vertices
+    // Bind buffer for vertices and load data
     gl.bindBuffer(gl.ARRAY_BUFFER, glVertices);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-    // Bind buffer for normals
+    // Bind buffer for normals and load data
     gl.bindBuffer(gl.ARRAY_BUFFER, glNormals);
     gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW);
-
-    // Bind buffer for uvs
+    // Bind buffer for uvs and load data
     gl.bindBuffer(gl.ARRAY_BUFFER, glUvs);
     gl.bufferData(gl.ARRAY_BUFFER, uvs, gl.STATIC_DRAW);
 
-    // Retrieve attribute locations
+    // Retrieve attribute and uniform locations
     let verticesLocation = gl.getAttribLocation(program, "vertex");
     let normalLocation = gl.getAttribLocation(program, "normal");
     let uvLocation = gl.getAttribLocation(program, "uv");
     let samplerLocation = gl.getUniformLocation(program, 'sampler');
     let normalSamplerLocation = gl.getUniformLocation(program, 'normal_sampler');
-
+    let bMaxLocation = gl.getUniformLocation(program, "b_max");
+    let bMinLocation = gl.getUniformLocation(program, "b_min");
+    let distanceLocation = gl.getUniformLocation(program, "d");
+    let textureModeLocation = gl.getUniformLocation(program, "texture_mode");
+    let textureAxisLocation = gl.getUniformLocation(program, "texture_axis");
 
     // Texture
     const texture = gl.createTexture();
@@ -88,15 +105,24 @@ function glDrawable(data, gl, program)
         width, height, border, srcFormat, srcType,
         pixel);
 
-
     // Normal
     const normalMap = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, normalMap);
-    const normalPixel = new Uint8Array([1, 1, 1, 255]);  // opaque grey
+    const normalPixel = new Uint8Array([1, 1, 1, 255]);  // don't change default normals by default
     gl.texImage2D(gl.TEXTURE_2D, 1, internalFormat,
         width, height, border, srcFormat, srcType,
         normalPixel);
 
+    // uv mapping parameters
+    // 0 - default UV read from data
+    // 1 - plane UV mapping
+    // 2 - cylindrical uv mapping
+    // 3 - spherical UV mapping
+    let uvMode = 0.0;
+    // 0 - X axis
+    // 1 - Y axis
+    // 2 - Z axis
+    let uvAxis = 0.0;
 
     let draw = function(PV)
     {
@@ -115,6 +141,12 @@ function glDrawable(data, gl, program)
         gl.uniform3f(gl.getUniformLocation(program, "ambient_color"), ambient_color[0], ambient_color[1], ambient_color[2]);
         gl.uniform3f(gl.getUniformLocation(program, "diffuse_color"), diffuse_color[0], diffuse_color[1], diffuse_color[2]);
         gl.uniform3f(gl.getUniformLocation(program, "specular_color"), specular_color[0], specular_color[1], specular_color[2]);
+        // Texture mapping
+        gl.uniform1f(textureModeLocation, uvMode);
+        gl.uniform1f(textureAxisLocation, uvAxis);
+        gl.uniform3f(bMaxLocation, bMax[0], bMax[1], bMax[2]);
+        gl.uniform3f(bMinLocation, bMin[0], bMin[1], bMin[2]);
+        gl.uniform3f(distanceLocation, distance[0], distance[1], distance[2]);
 
         // vertices
         gl.bindBuffer(gl.ARRAY_BUFFER, glVertices);
@@ -164,19 +196,23 @@ function glDrawable(data, gl, program)
         gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 3);
     };
 
+
     let rotate = function (angle, x, y, z) {
         modelMatrix = mat4.rotate(mat4.create(), modelMatrix, glMatrix.toRadian(angle), vec3.fromValues(x, y, z));
     };
+
 
     let translate = function(x, y, z)
     {
         modelMatrix = mat4.translate(mat4.create(), modelMatrix, vec3.fromValues(x, y, z));
     };
 
+
     let scale = function(x, y, z)
     {
         modelMatrix = mat4.scale(mat4.create(), modelMatrix, vec3.fromValues(x, y, z));
     };
+
 
     let loadTexture = function(dataUrl) {
         const image = new Image();
@@ -202,6 +238,7 @@ function glDrawable(data, gl, program)
         image.src = dataUrl;
     };
 
+
     let loadNormalMap = function(dataUrl) {
         const image = new Image();
         image.onload = function() {
@@ -225,7 +262,8 @@ function glDrawable(data, gl, program)
         };
         image.src = dataUrl;
     };
-    
+
+
     let setColor = function (type, color) {
           if(type == 0)
           {
@@ -241,6 +279,7 @@ function glDrawable(data, gl, program)
           }
     };
 
+
     let setCoefficient = function (type, coefficient) {
         if(type == 0)
         {
@@ -255,6 +294,7 @@ function glDrawable(data, gl, program)
             KS = coefficient;
         }
     };
+
 
     let getLightParams = function () {
         return{
@@ -273,6 +313,25 @@ function glDrawable(data, gl, program)
         }
     };
 
+
+    let setMappingMode = function (value) {
+        uvMode = parseFloat(value);
+    };
+    
+
+    let setMappingAxis = function (value) {
+        uvAxis = parseFloat(value);
+    };
+
+
+    let getMappingParams = function () {
+      return{
+          uvMode: uvMode,
+          uvAxis: uvAxis,
+        }
+    };
+
+
     return{
         name: name,
         draw : draw,
@@ -284,6 +343,9 @@ function glDrawable(data, gl, program)
         setCoefficient: setCoefficient,
         getLightParams: getLightParams,
         loadNormalMap: loadNormalMap,
+        setMappingMode: setMappingMode,
+        setMappingAxis: setMappingAxis,
+        getMappingParams: getMappingParams
     }
 
 }
